@@ -38,4 +38,5 @@ RUN install-php-extensions \
 	intl \
 	zip \
 	opcache \
-    mysqli
+    mysqli \
+	bcmath
