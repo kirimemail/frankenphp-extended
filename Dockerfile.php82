@@ -40,3 +40,6 @@ RUN install-php-extensions \
 	opcache \
     mysqli \
 	bcmath
+
+RUN addgroup -g 1000 app \
+    && adduser -G app -u 1000 app -D
