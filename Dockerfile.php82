@@ -41,7 +41,8 @@ RUN install-php-extensions \
 	zip \
 	opcache \
     mysqli \
-	bcmath
+	bcmath \
+	redis
 
 RUN addgroup -g 1000 ${USER} ; \
     adduser -G ${USER} -u 1000 ${USER} -D ; \
