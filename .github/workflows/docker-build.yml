@@ -1,11 +1,16 @@
 name: Build and Push Docker Images
 
 on:
+  workflow_dispatch:  # Manual trigger option
   push:
     branches: [ "main" ]
     tags: [ 'v*.*.*' ]
+    paths:
+      - 'Dockerfile.*'
   pull_request:
     branches: [ "main" ]
+    paths:
+      - 'Dockerfile.*'
 
 env:
   DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}

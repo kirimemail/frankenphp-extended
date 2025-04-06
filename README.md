@@ -16,30 +16,30 @@ This repository provides extended FrankenPHP Docker images with various PHP vers
 
 ```bash
 # Standard build
-docker build -t frankenphp-extended:8.2 -f Dockerfile.php82 .
+docker build -t frankenphp-extended:php82 -f Dockerfile.php82 .
 
 # Alpine variant
-docker build -t frankenphp-extended:8.2-alpine -f Dockerfile.php82.alpine .
+docker build -t frankenphp-extended:php82-alpine -f Dockerfile.php82.alpine .
 ```
 
 ### Building PHP 8.3 Image
 
 ```bash
 # Standard build
-docker build -t frankenphp-extended:8.3 -f Dockerfile.php83 .
+docker build -t frankenphp-extended:php83 -f Dockerfile.php83 .
 
 # Alpine variant
-docker build -t frankenphp-extended:8.3-alpine -f Dockerfile.php83.alpine .
+docker build -t frankenphp-extended:php83-alpine -f Dockerfile.php83.alpine .
 ```
 
 ### Building PHP 8.4 Image
 
 ```bash
 # Standard build
-docker build -t frankenphp-extended:8.4 -f Dockerfile.php84 .
+docker build -t frankenphp-extended:php84 -f Dockerfile.php84 .
 
 # Alpine variant
-docker build -t frankenphp-extended:8.4-alpine -f Dockerfile.php84.alpine .
+docker build -t frankenphp-extended:php84-alpine -f Dockerfile.php84.alpine .
 ```
 
 ## Using the Images
@@ -47,7 +47,13 @@ docker build -t frankenphp-extended:8.4-alpine -f Dockerfile.php84.alpine .
 After building, you can run your FrankenPHP container:
 
 ```bash
-docker run -p 80:80 -p 443:443 -v $(pwd):/app frankenphp-extended:8.3
+docker run -p 80:80 -p 443:443 -v $(pwd):/app frankenphp-extended:php83
 ```
 
-Replace the tag with your preferred PHP version.
+You can also pull the pre-built images from Docker Hub:
+
+```bash
+docker pull kirimemail/frankenphp-extended:php83
+# or
+docker pull kirimemail/frankenphp-extended:php83-alpine
+```

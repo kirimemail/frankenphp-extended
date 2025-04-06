@@ -37,19 +37,32 @@ COPY --from=composer/composer:latest-bin /composer /usr/bin/composer
 # Add build-base for ARM architectures and optimize compilation to prevent segmentation faults
 RUN set -ex \
 	&& apk --no-cache add postgresql-libs postgresql-dev sudo supervisor build-base \
-	&& export CFLAGS="-fPIC -DPIC -O1" \
-	&& export CXXFLAGS="-fPIC -DPIC -O1" \
+	&& apk add --no-cache --update --virtual .build-deps $PHPIZE_DEPS \
 	&& install-php-extensions \
 	pdo_mysql \
-    pdo_pgsql \
+	pdo_pgsql \
 	gd \
 	intl \
 	zip \
 	opcache \
-    mysqli \
+	mysqli \
 	bcmath \
 	redis \
+	imagick \
+	pcntl \
+	soap \
+	exif \
+	calendar \
+	sockets \
+	memcached \
+	mongodb \
+	yaml \
+	igbinary \
+	amqp \
+	&& apk del .build-deps \
 	&& apk del postgresql-dev
+
+RUN apk add --no-cache supervisor unzip p7zip procps && rm -rf /var/cache/apk/*
 
 ARG USER=app
 
