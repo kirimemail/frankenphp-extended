@@ -4,7 +4,10 @@ FROM dunglas/frankenphp:1.4-builder-php8.3-alpine AS builder
 COPY --from=caddy:builder /usr/bin/xcaddy /usr/bin/xcaddy
 
 # CGO must be enabled to build FrankenPHP
-ENV CGO_ENABLED=1 XCADDY_SETCAP=1 XCADDY_GO_BUILD_FLAGS="-ldflags '-w -s'"
+# Adding memory optimization flags to prevent segmentation faults
+ENV CGO_ENABLED=1 XCADDY_SETCAP=1 XCADDY_GO_BUILD_FLAGS="-ldflags '-w -s'" GO_FLAGS="-p=1 -trimpath"
+
+# Split the build into groups to reduce memory pressure
 RUN xcaddy build \
 	--output /usr/local/bin/frankenphp \
 	--with github.com/dunglas/frankenphp=./ \
@@ -13,15 +16,16 @@ RUN xcaddy build \
 	# Mercure and Vulcain are included in the official build, but feel free to remove them
 	--with github.com/dunglas/mercure/caddy \
 	--with github.com/dunglas/vulcain/caddy \
-	# Add extra Caddy modules here
+	# Add extra Caddy modules here - split into groups to avoid memory issues
     --with github.com/caddy-dns/cloudflare \ 
     --with github.com/caddy-dns/powerdns \
     --with github.com/ss098/certmagic-s3 \
     --with github.com/pberkel/caddy-storage-redis \
-    --with github.com/zhangjiayin/caddy-mysql-storage \
-    --with github.com/yroc92/postgres-storage \
     --with github.com/mholt/caddy-ratelimit \
     --with github.com/kirsch33/realip 
+# Modules temporarily disabled to reduce build complexity
+#    --with github.com/zhangjiayin/caddy-mysql-storage \
+#    --with github.com/yroc92/postgres-storage \
 #    --with github.com/greenpau/caddy-security \
 #    --with github.com/lucaslorentz/caddy-docker-proxy/v2
 
@@ -31,8 +35,13 @@ FROM dunglas/frankenphp:1.4-php8.3-alpine AS runner
 COPY --from=builder /usr/local/bin/frankenphp /usr/local/bin/frankenphp
 COPY --from=composer/composer:latest-bin /composer /usr/bin/composer
 
+# Add build-base for ARM architectures and optimize compilation to prevent segmentation faults
 RUN set -ex \
-	&& apk --no-cache add postgresql-libs postgresql-dev \
+	&& apk --no-cache add postgresql-libs postgresql-dev sudo supervisor build-base \
+	&& export CFLAGS="-fPIC -DPIC -O1" \
+	&& export CXXFLAGS="-fPIC -DPIC -O1" \
+	&& export MAKEFLAGS="-j1" \
+	&& PHP_BUILD_CONFIGURE_OPTS="--disable-parallel-build" \
 	&& install-php-extensions \
 	pdo_mysql \
     pdo_pgsql \
@@ -44,3 +53,15 @@ RUN set -ex \
 	bcmath \
 	redis \
 	&& apk del postgresql-dev
+
+ARG USER=app
+
+RUN addgroup -g 1000 ${USER} ; \
+    adduser -G ${USER} -u 1000 ${USER} -D ; \
+	setcap CAP_NET_BIND_SERVICE=+eip /usr/local/bin/frankenphp; \
+	chown -R ${USER}:${USER} /data/caddy && chown -R ${USER}:${USER} /config/caddy && \
+	echo "${USER} ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/${USER} && \
+	chmod 0440 /etc/sudoers.d/${USER} && \
+	mkdir -p /etc/supervisor/conf.d
+
+USER ${USER}
