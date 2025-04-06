@@ -1,4 +1,4 @@
-FROM dunglas/frankenphp:1.4-builder-php8.2 AS builder
+FROM dunglas/frankenphp:1.5-builder-php8.2 AS builder
 
 # Copy xcaddy in the builder image
 COPY --from=caddy:builder /usr/bin/xcaddy /usr/bin/xcaddy
@@ -28,7 +28,7 @@ RUN xcaddy build \
 #    --with github.com/greenpau/caddy-security \
 #    --with github.com/lucaslorentz/caddy-docker-proxy/v2
 
-FROM dunglas/frankenphp:1.4-php8.2 AS runner
+FROM dunglas/frankenphp:1.5-php8.2 AS runner
 
 # Replace the official binary by the one contained your custom modules
 COPY --from=builder /usr/local/bin/frankenphp /usr/local/bin/frankenphp
@@ -39,8 +39,6 @@ RUN set -ex \
     && apt install -y build-essential \
     && export CFLAGS="-fPIC -DPIC -O1" \
     && export CXXFLAGS="-fPIC -DPIC -O1" \
-    && export MAKEFLAGS="-j1" \
-    && PHP_BUILD_CONFIGURE_OPTS="--disable-parallel-build" \
     && install-php-extensions \
 	pdo_mysql \
     pdo_pgsql \
