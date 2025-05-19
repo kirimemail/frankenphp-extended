@@ -62,7 +62,9 @@ RUN set -ex \
 	&& apk del .build-deps \
 	&& apk del postgresql-dev
 
-RUN apk add --no-cache supervisor unzip p7zip procps && rm -rf /var/cache/apk/*
+RUN apk add --no-cache supervisor unzip p7zip procps nodejs npm \
+    && rm -rf /var/cache/apk/* \
+	&& npm install -g chokidar
 
 ARG USER=app
 
