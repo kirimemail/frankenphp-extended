@@ -34,6 +34,7 @@ FROM dunglas/frankenphp:1.5-php8.3-alpine AS runner
 # Replace the official binary by the one contained your custom modules
 COPY --from=builder /usr/local/bin/frankenphp /usr/local/bin/frankenphp
 COPY --from=composer/composer:latest-bin /composer /usr/bin/composer
+COPY docker/php.ini /usr/local/etc/php/conf.d/99-custom.ini
 
 # Add build-base for ARM architectures and optimize compilation to prevent segmentation faults
 RUN set -ex \
