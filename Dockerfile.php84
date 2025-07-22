@@ -82,5 +82,5 @@ RUN echo 'eval "$(/root/.local/bin/mise activate bash)"' >> /etc/skel/.bashrc
 RUN echo 'export PATH="/root/.local/share/mise/installs/node/lts/bin:$PATH"' >> /etc/skel/.bashrc
 
 RUN chmod 755 /root/.local/bin/mise
-RUN chmod -R 755 /root/.local/share/mise
+RUN if [ -d /root/.local/share/mise ]; then chmod -R 755 /root/.local/share/mise; fi
 ENV PATH="/root/.local/share/mise/installs/node/lts/bin:/root/.local/bin:$PATH"
