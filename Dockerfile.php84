@@ -68,4 +68,19 @@ RUN apt update && apt install -y wget \
 	&& apt install -y ./imapsync-2.301.deb \
 	&& rm -f imapsync-2.301.deb
 
-RUN apt update && apt install -y supervisor unzip 7zip procps && rm -rf /var/lib/apt/lists/*
+RUN apt update && apt install -y supervisor unzip 7zip procps curl && rm -rf /var/lib/apt/lists/*
+
+RUN curl https://mise.run | sh
+ENV PATH="/root/.local/bin:$PATH"
+RUN mise use --global node@lts && mise use --global npm@latest
+
+RUN echo 'eval "$(/root/.local/bin/mise activate bash)"' >> /root/.bashrc
+RUN echo 'export PATH="/root/.local/share/mise/installs/node/lts/bin:$PATH"' >> /root/.bashrc
+
+RUN mkdir -p /etc/skel
+RUN echo 'eval "$(/root/.local/bin/mise activate bash)"' >> /etc/skel/.bashrc
+RUN echo 'export PATH="/root/.local/share/mise/installs/node/lts/bin:$PATH"' >> /etc/skel/.bashrc
+
+RUN chmod 755 /root/.local/bin/mise
+RUN chmod -R 755 /root/.local/share/mise
+ENV PATH="/root/.local/share/mise/installs/node/lts/bin:/root/.local/bin:$PATH"
