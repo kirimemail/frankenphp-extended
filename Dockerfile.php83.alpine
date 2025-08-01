@@ -64,7 +64,7 @@ RUN set -ex \
     && apk del .build-deps \
 	&& apk del postgresql-dev
 
-RUN apk add --no-cache supervisor unzip p7zip qpdf zip procps nodejs npm \
+RUN apk add --no-cache supervisor unzip p7zip qpdf zip procps nodejs npm imagemagick ghostscript \
     && rm -rf /var/cache/apk/* \
 	&& npm install -g chokidar
 	
