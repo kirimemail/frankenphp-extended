@@ -34,9 +34,9 @@ RUN set -ex \
     && apt-get purge -y --auto-remove build-essential
 
 RUN apt update && apt install -y wget \
-	&& wget https://imapsync.lamiral.info/dist2/imapsync-2.301.deb \
-	&& apt install -y ./imapsync-2.301.deb \
-	&& rm -f imapsync-2.301.deb
+	&& wget https://imapsync.lamiral.info/dist2/imapsync-2.314.deb \
+	&& apt install -y ./imapsync-2.314.deb \
+	&& rm -f imapsync-2.314.deb
 
 RUN apt update && apt install -y supervisor unzip 7zip qpdf zip procps curl imagemagick ghostscript && rm -rf /var/lib/apt/lists/*
 
