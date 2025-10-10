@@ -1,37 +1,4 @@
-FROM dunglas/frankenphp:1.9-builder-php8.4 AS builder
-
-# Copy xcaddy in the builder image
-COPY --from=caddy:builder /usr/bin/xcaddy /usr/bin/xcaddy
-
-# CGO must be enabled to build FrankenPHP
-# Adding memory optimization flags to prevent segmentation faults
-ENV CGO_ENABLED=1 XCADDY_SETCAP=1 XCADDY_GO_BUILD_FLAGS="-ldflags '-w -s'"
-# Split the build into groups to reduce memory pressure
-RUN xcaddy build \
-	--output /usr/local/bin/frankenphp \
-	--with github.com/dunglas/frankenphp=./ \
-	--with github.com/dunglas/frankenphp/caddy=./caddy/ \
-	--with github.com/dunglas/caddy-cbrotli \
-	# Mercure and Vulcain are included in the official build, but feel free to remove them
-	--with github.com/dunglas/mercure/caddy \
-	--with github.com/dunglas/vulcain/caddy \
-	# Add extra Caddy modules here - split into groups to avoid memory issues
-    --with github.com/caddy-dns/cloudflare \ 
-    #--with github.com/caddy-dns/powerdns \
-    --with github.com/ss098/certmagic-s3 \
-    --with github.com/pberkel/caddy-storage-redis \
-    --with github.com/mholt/caddy-ratelimit \
-    --with github.com/kirsch33/realip 
-# Modules temporarily disabled to reduce build complexity
-#    --with github.com/zhangjiayin/caddy-mysql-storage \
-#    --with github.com/yroc92/postgres-storage \
-#    --with github.com/greenpau/caddy-security \
-#    --with github.com/lucaslorentz/caddy-docker-proxy/v2
-
 FROM dunglas/frankenphp:1.9-php8.4 AS runner
-
-# Replace the official binary by the one contained your custom modules
-COPY --from=builder /usr/local/bin/frankenphp /usr/local/bin/frankenphp
 COPY --from=composer/composer:latest-bin /composer /usr/bin/composer
 COPY docker/php.ini /usr/local/etc/php/conf.d/99-custom.ini
 
