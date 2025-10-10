@@ -1,4 +1,4 @@
-FROM dunglas/frankenphp:1.5-builder-php8.4 AS builder
+FROM dunglas/frankenphp:1.9-builder-php8.4 AS builder
 
 # Copy xcaddy in the builder image
 COPY --from=caddy:builder /usr/bin/xcaddy /usr/bin/xcaddy
@@ -28,7 +28,7 @@ RUN xcaddy build \
 #    --with github.com/greenpau/caddy-security \
 #    --with github.com/lucaslorentz/caddy-docker-proxy/v2
 
-FROM dunglas/frankenphp:1.5-php8.4 AS runner
+FROM dunglas/frankenphp:1.9-php8.4 AS runner
 
 # Replace the official binary by the one contained your custom modules
 COPY --from=builder /usr/local/bin/frankenphp /usr/local/bin/frankenphp
@@ -61,6 +61,7 @@ RUN set -ex \
 	yaml \
 	igbinary \
 	amqp \
+	imap \
     && apt-get purge -y --auto-remove build-essential
 
 RUN apt update && apt install -y wget \
