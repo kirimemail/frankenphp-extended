@@ -1,54 +1,72 @@
-FROM dunglas/frankenphp:1.9-php8.3 AS runner
+FROM dunglas/frankenphp:1.10.1-php8.3 AS runner
+
+# Replace the official binary by the one contained your custom modules
 COPY --from=composer/composer:latest-bin /composer /usr/bin/composer
 COPY docker/php.ini /usr/local/etc/php/conf.d/99-custom.ini
 
+# Install PHP extensions and system dependencies in a single layer to reduce image size
 RUN set -ex \
-    && apt update \
-    && apt install -y build-essential \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends \
+        build-essential \
+        wget \
+        supervisor \
+        unzip \
+        7zip \
+        qpdf \
+        zip \
+        procps \
+        curl \
+        imagemagick \
+        ghostscript \
     && export CFLAGS="-fPIC -DPIC -O1" \
     && export CXXFLAGS="-fPIC -DPIC -O1" \
     && install-php-extensions \
-	pdo_mysql \
-    pdo_pgsql \
-	gd \
-	intl \
-	zip \
-	opcache \
-    mysqli \
-	bcmath \
-	redis \
-	imagick \
-	pcntl \
-	soap \
-	exif \
-	calendar \
-	sockets \
-	memcached \
-	mongodb \
-	yaml \
-	igbinary \
-	amqp \
-	imap \
-    && apt-get purge -y --auto-remove build-essential
+        pdo_mysql \
+        pdo_pgsql \
+        gd \
+        intl \
+        zip \
+        opcache \
+        mysqli \
+        bcmath \
+        redis \
+        imagick \
+        pcntl \
+        soap \
+        exif \
+        calendar \
+        sockets \
+        memcached \
+        mongodb \
+        yaml \
+        igbinary \
+        amqp \
+        imap \
+    && wget -q https://imapsync.lamiral.info/dist2/imapsync-2.314.deb \
+    && apt-get install -y ./imapsync-2.314.deb \
+    && rm -f imapsync-2.314.deb \
+    && apt-get purge -y --auto-remove build-essential \
+    && apt-get autoremove -y \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-RUN apt update && apt install -y wget \
-	&& wget https://imapsync.lamiral.info/dist2/imapsync-2.314.deb \
-	&& apt install -y ./imapsync-2.314.deb \
-	&& rm -f imapsync-2.314.deb
+# Install mise and Node.js
+RUN curl https://mise.run | sh \
+    && chmod 755 /root/.local/bin/mise \
+    && /root/.local/bin/mise use --global node@lts \
+    && /root/.local/bin/mise use --global npm@latest
 
-RUN apt update && apt install -y supervisor unzip 7zip qpdf zip procps curl imagemagick ghostscript && rm -rf /var/lib/apt/lists/*
+# Configure environment for mise and Node.js
+ENV PATH="/root/.local/bin:/root/.local/share/mise/installs/node/latest/bin:$PATH"
 
-RUN curl https://mise.run | sh
-ENV PATH="/root/.local/bin:$PATH"
-RUN mise use --global node@lts && mise use --global npm@latest
+# Configure bashrc for mise activation
+RUN echo 'eval "$(/root/.local/bin/mise activate bash)"' >> /root/.bashrc \
+    && mkdir -p /etc/skel \
+    && echo 'eval "$(/root/.local/bin/mise activate bash)"' >> /etc/skel/.bashrc
 
-RUN echo 'eval "$(/root/.local/bin/mise activate bash)"' >> /root/.bashrc
-RUN echo 'export PATH="/root/.local/share/mise/installs/node/lts/bin:$PATH"' >> /root/.bashrc
-
-RUN mkdir -p /etc/skel
-RUN echo 'eval "$(/root/.local/bin/mise activate bash)"' >> /etc/skel/.bashrc
-RUN echo 'export PATH="/root/.local/share/mise/installs/node/lts/bin:$PATH"' >> /etc/skel/.bashrc
-
-RUN chmod 755 /root/.local/bin/mise
+# Set proper permissions for mise directories
 RUN if [ -d /root/.local/share/mise ]; then chmod -R 755 /root/.local/share/mise; fi
-ENV PATH="/root/.local/share/mise/installs/node/lts/bin:/root/.local/bin:$PATH"
+
+# Create and set permissions for /config/psysh directory
+RUN mkdir -p /config/psysh && chmod -R 777 /config/psysh

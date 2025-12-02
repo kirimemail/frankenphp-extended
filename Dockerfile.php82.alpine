@@ -1,51 +1,62 @@
-FROM dunglas/frankenphp:1.9-php8.2-alpine AS runner
-
+FROM dunglas/frankenphp:1.10.1-php8.2-alpine AS runner
 
 COPY --from=composer/composer:latest-bin /composer /usr/bin/composer
 COPY docker/php.ini /usr/local/etc/php/conf.d/99-custom.ini
 
-# Add build-base for ARM architectures and optimize compilation to prevent segmentation faults
+# Install PHP extensions and system dependencies in optimized layers
 RUN set -ex \
-	&& apk --no-cache add postgresql-libs postgresql-dev sudo supervisor build-base \
-	&& apk add --no-cache --update --virtual .build-deps $PHPIZE_DEPS \
-	&& install-php-extensions \
-	pdo_mysql \
-	pdo_pgsql \
-	gd \
-	intl \
-	zip \
-	opcache \
-	mysqli \
-	bcmath \
-	redis \
-	imagick \
-	pcntl \
-	soap \
-	exif \
-	calendar \
-	sockets \
-	memcached \
-	mongodb \
-	yaml \
-	igbinary \
-	amqp \
-	imap \
-	&& apk del .build-deps \
-	&& apk del postgresql-dev
-
-RUN apk add --no-cache supervisor unzip p7zip qpdf zip procps nodejs npm imagemagick ghostscript \
-    && rm -rf /var/cache/apk/* \
-	&& npm install -g chokidar
+    && apk update \
+    && apk add --no-cache \
+        postgresql-libs \
+        sudo \
+        supervisor \
+        unzip \
+        p7zip \
+        qpdf \
+        zip \
+        procps \
+        nodejs \
+        npm \
+        imagemagick \
+        ghostscript \
+        build-base \
+    && apk add --no-cache --update --virtual .build-deps $PHPIZE_DEPS \
+    && install-php-extensions \
+        pdo_mysql \
+        pdo_pgsql \
+        gd \
+        intl \
+        zip \
+        opcache \
+        mysqli \
+        bcmath \
+        redis \
+        imagick \
+        pcntl \
+        soap \
+        exif \
+        calendar \
+        sockets \
+        memcached \
+        mongodb \
+        yaml \
+        igbinary \
+        amqp \
+        imap \
+    && apk del .build-deps \
+    && npm install -g chokidar \
+    && rm -rf /var/cache/apk/*
 
 ARG USER=app
 
-RUN addgroup -g 1000 ${USER} ; \
-    adduser -G ${USER} -u 1000 ${USER} -D ; \
-	setcap CAP_NET_BIND_SERVICE=+eip /usr/local/bin/frankenphp; \
-	mkdir -p /config/psysh && \
-	chown -R ${USER}:${USER} /data/caddy && chown -R ${USER}:${USER} /config/caddy && chown -R ${USER}:${USER} /config/psysh && \
-	echo "${USER} ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/${USER} && \
-	chmod 0440 /etc/sudoers.d/${USER} && \
-	mkdir -p /etc/supervisor/conf.d
+RUN addgroup -g 1000 ${USER} \
+    && adduser -G ${USER} -u 1000 ${USER} -D \
+    && setcap CAP_NET_BIND_SERVICE=+eip /usr/local/bin/frankenphp \
+    && mkdir -p /config/psysh \
+    && chown -R ${USER}:${USER} /data/caddy \
+    && chown -R ${USER}:${USER} /config \
+    && echo "${USER} ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/${USER} \
+    && chmod 0440 /etc/sudoers.d/${USER} \
+    && mkdir -p /etc/supervisor/conf.d
 
 USER ${USER}
