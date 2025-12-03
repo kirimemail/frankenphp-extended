@@ -88,6 +88,7 @@ RUN set -ex \
 # Install mise and Node.js
 RUN curl https://mise.run | sh \
     && chmod 755 /root/.local/bin/mise \
+    && export PATH="/root/.local/bin:$PATH" \
     && /root/.local/bin/mise use --global node@lts \
     && /root/.local/bin/mise use --global npm@latest
 
