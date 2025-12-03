@@ -19,6 +19,19 @@ RUN set -ex \
         curl \
         imagemagick \
         ghostscript \
+        perl \
+        perl-modules \
+        cpanminus \
+        libauthen-ntlm-perl \
+        libnet-server-perl \
+        libmail-imapclient-perl \
+        libio-socket-inet6-perl \
+        libio-socket-ssl-perl \
+        libdigest-hmac-perl \
+        libfile-copy-recursive-perl \
+        libmime-tools-perl \
+        libunicode-string-perl \
+        libterm-readkey-perl \
     && export CFLAGS="-fPIC -DPIC -O1" \
     && export CXXFLAGS="-fPIC -DPIC -O1" \
     && install-php-extensions \
