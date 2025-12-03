@@ -23,15 +23,36 @@ RUN set -ex \
         perl-modules \
         cpanminus \
         libauthen-ntlm-perl \
-        libnet-server-perl \
-        libmail-imapclient-perl \
+        libcgi-pm-perl \
+        libcrypt-openssl-rsa-perl \
+        libdata-uniqid-perl \
+        libencode-imaputf7-perl \
+        libfile-copy-recursive-perl \
+        libfile-tail-perl \
+        libhttp-daemon-perl \
+        libhttp-daemon-ssl-perl \
+        libhttp-message-perl \
         libio-socket-inet6-perl \
         libio-socket-ssl-perl \
-        libdigest-hmac-perl \
-        libfile-copy-recursive-perl \
-        libmime-tools-perl \
-        libunicode-string-perl \
+        libio-tee-perl \
+        libhtml-parser-perl \
+        libjson-webtoken-perl \
+        libmail-imapclient-perl \
+        libmodule-scandeps-perl \
+        libnet-server-perl \
+        libnet-dns-perl \
+        libparse-recdescent-perl \
+        libproc-processtable-perl \
+        libreadonly-perl \
+        libregexp-common-perl \
+        libsys-meminfo-perl \
         libterm-readkey-perl \
+        libtest-mockobject-perl \
+        libunicode-string-perl \
+        liburi-perl \
+        libwww-perl \
+        make \
+        time \
     && export CFLAGS="-fPIC -DPIC -O1" \
     && export CXXFLAGS="-fPIC -DPIC -O1" \
     && install-php-extensions \
@@ -56,9 +77,9 @@ RUN set -ex \
         igbinary \
         amqp \
         imap \
-    && wget -q https://imapsync.lamiral.info/dist2/imapsync-2.314.deb \
-    && apt-get install -y ./imapsync-2.314.deb \
-    && rm -f imapsync-2.314.deb \
+    && wget -N https://imapsync.lamiral.info/dist2/imapsync.deb \
+    && apt install -y ./imapsync.deb \
+    && rm -f imapsync.deb \
     && apt-get purge -y --auto-remove build-essential \
     && apt-get autoremove -y \
     && apt-get clean \
