@@ -26,7 +26,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php-version: [8.2, 8.3, 8.4]
+        php-version: [8.2, 8.3, 8.4, 8.5]
         variant: [alpine, '']
         include:
           - php-version: 8.2
@@ -35,6 +35,8 @@ jobs:
             php-tag: php83
           - php-version: 8.4
             php-tag: php84
+          - php-version: 8.5
+            php-tag: php85
           - variant: alpine
             variant-tag: alpine
           - variant: ''

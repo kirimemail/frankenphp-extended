@@ -9,6 +9,7 @@ This repository provides extended FrankenPHP Docker images with various PHP vers
 - PHP 8.2: `Dockerfile.php82` and `Dockerfile.php82.alpine`
 - PHP 8.3: `Dockerfile.php83` and `Dockerfile.php83.alpine`
 - PHP 8.4: `Dockerfile.php84` and `Dockerfile.php84.alpine`
+- PHP 8.5: `Dockerfile.php85` and `Dockerfile.php85.alpine`
 
 ## Build Examples
 
@@ -40,6 +41,16 @@ docker build -t frankenphp-extended:php84 -f Dockerfile.php84 .
 
 # Alpine variant
 docker build -t frankenphp-extended:php84-alpine -f Dockerfile.php84.alpine .
+```
+
+### Building PHP 8.5 Image
+
+```bash
+# Standard build
+docker build -t frankenphp-extended:php85 -f Dockerfile.php85 .
+
+# Alpine variant
+docker build -t frankenphp-extended:php85-alpine -f Dockerfile.php85.alpine .
 ```
 
 ## Using the Images
