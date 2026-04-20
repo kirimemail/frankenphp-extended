@@ -22,6 +22,7 @@ RUN set -ex \
         perl \
         perl-modules \
         cpanminus \
+        nano \
         libauthen-ntlm-perl \
         libcgi-pm-perl \
         libcrypt-openssl-rsa-perl \
@@ -77,6 +78,7 @@ RUN set -ex \
         igbinary \
         amqp \
         imap \
+        mailparse \
     && wget -N https://imapsync.lamiral.info/dist2/imapsync.deb \
     && apt install -y ./imapsync.deb \
     && rm -f imapsync.deb \

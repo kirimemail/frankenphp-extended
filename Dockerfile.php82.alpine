@@ -17,6 +17,7 @@ RUN set -ex \
         procps \
         nodejs \
         npm \
+        nano \
         imagemagick \
         ghostscript \
         build-base \
@@ -43,6 +44,7 @@ RUN set -ex \
         igbinary \
         amqp \
         imap \
+        mailparse \
     && apk del .build-deps \
     && npm install -g chokidar \
     && rm -rf /var/cache/apk/*
