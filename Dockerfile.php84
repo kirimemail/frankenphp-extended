@@ -79,6 +79,7 @@ RUN set -ex \
         amqp \
         imap \
         mailparse \
+        excimer \
     && wget -N https://imapsync.lamiral.info/dist2/imapsync.deb \
     && apt install -y ./imapsync.deb \
     && rm -f imapsync.deb \

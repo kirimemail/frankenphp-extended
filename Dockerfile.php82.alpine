@@ -45,6 +45,7 @@ RUN set -ex \
         amqp \
         imap \
         mailparse \
+        excimer \
     && apk del .build-deps \
     && npm install -g chokidar \
     && rm -rf /var/cache/apk/*
