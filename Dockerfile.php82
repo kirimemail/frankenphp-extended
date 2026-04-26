@@ -1,110 +1,35 @@
 FROM dunglas/frankenphp:1.12.0-php8.2 AS runner
 
-# Replace the official binary by the one contained your custom modules
 COPY --from=composer/composer:latest-bin /composer /usr/bin/composer
 COPY docker/php.ini /usr/local/etc/php/conf.d/99-custom.ini
 
-# Install PHP extensions and system dependencies in a single layer to reduce image size
 RUN set -ex \
+    && curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
-        build-essential \
-        wget \
-        supervisor \
-        unzip \
-        7zip \
-        qpdf \
-        zip \
-        procps \
-        curl \
-        imagemagick \
-        ghostscript \
-        perl \
-        perl-modules \
-        cpanminus \
-        nano \
-        libauthen-ntlm-perl \
-        libcgi-pm-perl \
-        libcrypt-openssl-rsa-perl \
-        libdata-uniqid-perl \
-        libencode-imaputf7-perl \
-        libfile-copy-recursive-perl \
-        libfile-tail-perl \
-        libhttp-daemon-perl \
-        libhttp-daemon-ssl-perl \
-        libhttp-message-perl \
-        libio-socket-inet6-perl \
-        libio-socket-ssl-perl \
-        libio-tee-perl \
-        libhtml-parser-perl \
-        libjson-webtoken-perl \
-        libmail-imapclient-perl \
-        libmodule-scandeps-perl \
-        libnet-server-perl \
-        libnet-dns-perl \
-        libparse-recdescent-perl \
-        libproc-processtable-perl \
-        libreadonly-perl \
-        libregexp-common-perl \
-        libsys-meminfo-perl \
-        libterm-readkey-perl \
-        libtest-mockobject-perl \
-        libunicode-string-perl \
-        liburi-perl \
-        libwww-perl \
-        make \
-        time \
-    && export CFLAGS="-fPIC -DPIC -O1" \
-    && export CXXFLAGS="-fPIC -DPIC -O1" \
+        build-essential wget supervisor unzip p7zip qpdf zip \
+        procps curl imagemagick ghostscript perl perl-modules cpanminus nano \
+        libauthen-ntlm-perl libcgi-pm-perl libcrypt-openssl-rsa-perl \
+        libdata-uniqid-perl libencode-imaputf7-perl libfile-copy-recursive-perl \
+        libfile-tail-perl libhttp-daemon-perl libhttp-daemon-ssl-perl \
+        libhttp-message-perl libio-socket-inet6-perl libio-socket-ssl-perl \
+        libio-tee-perl libhtml-parser-perl libjson-webtoken-perl \
+        libmail-imapclient-perl libmodule-scandeps-perl libnet-server-perl \
+        libnet-dns-perl libparse-recdescent-perl libproc-processtable-perl \
+        libreadonly-perl libregexp-common-perl libsys-meminfo-perl \
+        libterm-readkey-perl libtest-mockobject-perl libunicode-string-perl \
+        liburi-perl libwww-perl make time nodejs \
+    && export CFLAGS="-fPIC -DPIC -O1" CXXFLAGS="-fPIC -DPIC -O1" \
     && install-php-extensions \
-        pdo_mysql \
-        pdo_pgsql \
-        gd \
-        intl \
-        zip \
-        opcache \
-        mysqli \
-        bcmath \
-        redis \
-        imagick \
-        pcntl \
-        soap \
-        exif \
-        calendar \
-        sockets \
-        memcached \
-        mongodb \
-        yaml \
-        igbinary \
-        amqp \
-        imap \
-        mailparse \
-        excimer \
+        pdo_mysql pdo_pgsql gd intl zip opcache mysqli bcmath \
+        redis imagick pcntl soap exif calendar sockets \
+        memcached mongodb yaml igbinary amqp imap mailparse excimer \
     && wget -N https://imapsync.lamiral.info/dist2/imapsync.deb \
     && apt install -y ./imapsync.deb \
     && rm -f imapsync.deb \
-    && apt-get purge -y --auto-remove build-essential \
+    && apt-get purge -y build-essential \
     && apt-get autoremove -y \
     && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
-# Install mise and Node.js
-RUN curl https://mise.run | sh \
-    && chmod 755 /root/.local/bin/mise \
-    && export PATH="/root/.local/bin:$PATH" \
-    && /root/.local/bin/mise use --global node@lts \
-    && /root/.local/bin/mise use --global npm@latest
-
-# Configure environment for mise and Node.js
-ENV PATH="/root/.local/bin:/root/.local/share/mise/installs/node/latest/bin:$PATH"
-
-# Configure bashrc for mise activation
-RUN echo 'eval "$(/root/.local/bin/mise activate bash)"' >> /root/.bashrc \
-    && mkdir -p /etc/skel \
-    && echo 'eval "$(/root/.local/bin/mise activate bash)"' >> /etc/skel/.bashrc
-
-# Set proper permissions for mise directories
-RUN if [ -d /root/.local/share/mise ]; then chmod -R 755 /root/.local/share/mise; fi
-
-# Create and set permissions for /config/psysh directory
-RUN mkdir -p /config/psysh && chmod -R 777 /config/psysh
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
+    && npm install -g chokidar \
+    && mkdir -p /config/psysh
