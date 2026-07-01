@@ -18,7 +18,7 @@ RUN set -ex \
         libnet-dns-perl libparse-recdescent-perl libproc-processtable-perl \
         libreadonly-perl libregexp-common-perl libsys-meminfo-perl \
         libterm-readkey-perl libtest-mockobject-perl libunicode-string-perl \
-        liburi-perl libwww-perl make time nodejs \
+        liburi-perl libwww-perl make time traceroute iputils-ping telnet dnsutils net-tools netcat-openbsd mtr-tiny nodejs \
     && export CFLAGS="-fPIC -DPIC -O1" CXXFLAGS="-fPIC -DPIC -O1" \
     && install-php-extensions \
         pdo_mysql pdo_pgsql gd intl zip opcache mysqli bcmath \
