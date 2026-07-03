@@ -8,28 +8,16 @@ RUN set -ex \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
         build-essential wget supervisor unzip p7zip qpdf zip \
-        procps curl imagemagick ghostscript perl perl-modules cpanminus nano \
-        libauthen-ntlm-perl libcgi-pm-perl libcrypt-openssl-rsa-perl \
-        libdata-uniqid-perl libencode-imaputf7-perl libfile-copy-recursive-perl \
-        libfile-tail-perl libhttp-daemon-perl libhttp-daemon-ssl-perl \
-        libhttp-message-perl libio-socket-inet6-perl libio-socket-ssl-perl \
-        libio-tee-perl libhtml-parser-perl libjson-webtoken-perl \
-        libmail-imapclient-perl libmodule-scandeps-perl libnet-server-perl \
-        libnet-dns-perl libparse-recdescent-perl libproc-processtable-perl \
-        libreadonly-perl libregexp-common-perl libsys-meminfo-perl \
-        libterm-readkey-perl libtest-mockobject-perl libunicode-string-perl \
-        liburi-perl libwww-perl make time traceroute iputils-ping telnet dnsutils net-tools netcat-openbsd mtr-tiny nodejs \
+        procps curl imagemagick ghostscript strace tcpdump jq nano \
+        make time traceroute iputils-ping telnet dnsutils net-tools netcat-openbsd mtr-tiny nodejs \
     && export CFLAGS="-fPIC -DPIC -O1" CXXFLAGS="-fPIC -DPIC -O1" \
     && install-php-extensions \
         pdo_mysql pdo_pgsql gd intl zip opcache mysqli bcmath \
         redis imagick pcntl soap exif calendar sockets \
         memcached mongodb yaml igbinary amqp imap mailparse \
-    && wget -N https://imapsync.lamiral.info/dist2/imapsync.deb \
-    && apt install -y ./imapsync.deb \
-    && rm -f imapsync.deb \
     && apt-get purge -y build-essential \
     && apt-get autoremove -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
-    && npm install -g chokidar \
+    && npm install -g chokidar-cli \
     && mkdir -p /config/psysh

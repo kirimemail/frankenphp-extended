@@ -15,8 +15,8 @@ RUN set -ex \
 
 RUN apk add --no-cache \
         postgresql-libs sudo supervisor unzip p7zip qpdf zip \
-        procps traceroute iputils busybox-extras bind-tools net-tools mtr nodejs npm nano imagemagick ghostscript \
-    && npm install -g chokidar \
+        procps traceroute iputils busybox-extras bind-tools net-tools mtr strace tcpdump jq nodejs npm nano imagemagick ghostscript \
+    && npm install -g chokidar-cli \
     && rm -rf /var/cache/apk/*
 
 ARG USER=app
