@@ -2,7 +2,7 @@
 
 Extended [FrankenPHP](https://frankenphp.dev/) Docker images with additional PHP extensions, debugging tooling, and runtime utilities.
 
-Built on [`dunglas/frankenphp:1.12`](https://github.com/php/frankenphp) (floating tag, latest 1.12.x) and published to Docker Hub as [`kirimemail/frankenphp-extended`](https://hub.docker.com/r/kirimemail/frankenphp-extended).
+Built on [`dunglas/frankenphp:1.13`](https://github.com/php/frankenphp) (floating tag, latest 1.13.x) and published to Docker Hub as [`kirimemail/frankenphp-extended`](https://hub.docker.com/r/kirimemail/frankenphp-extended).
 
 ## Available Images
 
@@ -10,10 +10,10 @@ Two base variants for each PHP version:
 
 | Variant | Base | User | Use case |
 |---------|------|------|----------|
-| **Debian** (`php8X`) | `dunglas/frankenphp:1.12-php8.X` | `root` | Production — full tooling, runs as root (non-root user applied downstream in your own Dockerfile) |
-| **Alpine** (`php8X-alpine`) | `dunglas/frankenphp:1.12-php8.X-alpine` | `app` (UID 1000) | Development — smaller image, non‑root user with `sudo`, supervisor pre‑configured |
+| **Debian** (`php8X`) | `dunglas/frankenphp:1.13-php8.X` | `root` | Production — full tooling, runs as root (non-root user applied downstream in your own Dockerfile) |
+| **Alpine** (`php8X-alpine`) | `dunglas/frankenphp:1.13-php8.X-alpine` | `app` (UID 1000) | Development — smaller image, non‑root user with `sudo`, supervisor pre‑configured |
 
-PHP versions: **8.2**, **8.3**, **8.4**, **8.5**
+PHP versions: **8.3**, **8.4**, **8.5**
 
 ## Quick Start
 
@@ -38,7 +38,7 @@ docker build -t frankenphp-extended:php83 -f Dockerfile.php83 .
 docker build -t frankenphp-extended:php83-alpine -f Dockerfile.php83.alpine .
 ```
 
-Replace `php83` with `php82`, `php84`, or `php85` for other versions.
+Replace `php83` with `php84` or `php85` for other versions.
 
 ## Docker Compose
 
@@ -140,7 +140,7 @@ A `/config/psysh` directory is pre‑created for [PsySH](https://psysh.org/) con
 
 The repository includes a GitHub Actions workflow (`.github/workflows/docker-build.yml`) that:
 
-- Builds **all 8 images** on push to `main`, tags matching `v*.*.*`, or manual trigger
+- Builds **all 6 images** on push to `main`, tags matching `v*.*.*`, or manual trigger
 - Builds on PRs (push only, no deploy)
 - Builds for **`linux/amd64`** and **`linux/arm64`** via Docker Buildx + QEMU
 - Caches layers with GitHub Actions cache (`type=gha`)
@@ -152,8 +152,6 @@ Trigger a manual build: **Actions** → **Build and Push Docker Images** → **R
 
 | Tag | Base | PHP |
 | ----- | ------ | ----- |
-| `php82` | Debian | 8.2 |
-| `php82-alpine` | Alpine | 8.2 |
 | `php83` | Debian | 8.3 |
 | `php83-alpine` | Alpine | 8.3 |
 | `php84` | Debian | 8.4 |

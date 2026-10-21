@@ -26,11 +26,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php-version: [8.2, 8.3, 8.4, 8.5]
+        php-version: [8.3, 8.4, 8.5]
         variant: [alpine, ""]
         include:
-          - php-version: 8.2
-            php-tag: php82
           - php-version: 8.3
             php-tag: php83
           - php-version: 8.4
@@ -66,10 +64,15 @@ jobs:
           VARIANT_TAG=${{ matrix.variant-tag }}
           if [ -n "$VARIANT_TAG" ]; then
             FULL_TAG="${PHP_TAG}-${VARIANT_TAG}"
+            DOCKERFILE="Dockerfile.${PHP_TAG}.${VARIANT_TAG}"
           else
             FULL_TAG="${PHP_TAG}"
+            DOCKERFILE="Dockerfile.${PHP_TAG}"
           fi
+          IMAGE_REF="${DOCKER_HUB_ORGANIZATION}/${IMAGE_NAME}:${FULL_TAG}"
           echo "full_tag=${FULL_TAG}" >> $GITHUB_OUTPUT
+          echo "dockerfile=${DOCKERFILE}" >> $GITHUB_OUTPUT
+          echo "image_ref=${IMAGE_REF}" >> $GITHUB_OUTPUT
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
@@ -77,8 +80,8 @@ jobs:
           context: .
           push: ${{ github.event_name != 'pull_request' }}
           platforms: linux/amd64,linux/arm64
-          file: "Dockerfile.${{ matrix.php-tag }}${{ matrix.variant-tag != '' && '.' || '' }}${{ matrix.variant-tag }}"
+          file: ${{ steps.prep.outputs.dockerfile }}
           tags: |
-            ${{ env.DOCKER_HUB_ORGANIZATION }}/${{ env.IMAGE_NAME }}:${{ steps.prep.outputs.full_tag }}
+            ${{ steps.prep.outputs.image_ref }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
