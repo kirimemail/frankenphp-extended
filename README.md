@@ -144,7 +144,7 @@ Every image ships `docker/php.ini` as `conf.d/99-custom.ini`. No action needed:
 | `allow_url_include` | `Off` | No inclusion of remote code |
 | `enable_dl` / `phar.readonly` / `ffi.enable` | `Off` / `On` / `Off` | No runtime native-code loading, no writable PHARs, no FFI |
 | `user_ini.filename` | `""` | `.user.ini` files in the docroot cannot override configuration |
-| `session.*` | strict mode, cookies only, `HttpOnly`, `SameSite=Lax` | Session fixation / theft hardening |
+| `session.*` | strict mode, cookies only, `HttpOnly`, `SameSite=Lax`, `upload_progress.enabled=0` | Session fixation / theft and session-flooding hardening |
 | `mail.add_x_header` | `Off` | No PHP binary path leaked into mail headers |
 
 `session.cookie_secure` stays `0` so plain-HTTP development works; set it to `1` in the application once traffic is HTTPS-only.
