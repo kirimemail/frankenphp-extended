@@ -1,0 +1,41 @@
+# kirimemail/frankenphp-extended - server-level (Caddy) hardening
+#
+# Installed at: /etc/frankenphp/hardening/global-hardening.caddy
+#
+# Usage - import it inside the global options block of your Caddyfile:
+#
+#     {
+#         import /etc/frankenphp/hardening/global-hardening.caddy
+#     }
+#
+# If you cannot edit the Caddyfile (e.g. the base image's default one), the
+# stock image Caddyfile already splices in {$CADDY_GLOBAL_OPTIONS}, so importing
+# the snippet through the environment is enough:
+#
+#   -e CADDY_GLOBAL_OPTIONS="import /etc/frankenphp/hardening/global-hardening.caddy"
+
+# Keep the admin API on the loopback interface. Never publish port 2019.
+admin localhost:2019
+
+servers {
+	# Caddy accepts 1MB of request headers by default - far more than any
+	# legitimate client sends. Bounds header-flooding / memory pressure.
+	max_header_size 64KB
+
+	# Slowloris protection: a client that stalls while sending request headers
+	# is dropped instead of holding a connection (Caddy waits forever by default).
+	timeouts {
+		read_header 10s
+		idle 120s
+		# read_body is intentionally not set: it is a hard cap on the whole
+		# body transfer and aborts slow but healthy uploads. FrankenPHP already
+		# cuts *stalled* uploads after 60s via php_server request_body_timeout.
+		#
+		# write_body is left off as well - it truncates long downloads, SSE and
+		# Mercure streams.
+	}
+
+	# Optional, per deployment:
+	#   strict_sni_host on                       (reject Host != SNI)
+	#   trusted_proxies static 10.0.0.0/8        (only trust X-Forwarded-* here)
+}

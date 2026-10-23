@@ -2,6 +2,8 @@ FROM dunglas/frankenphp:1.13-php8.4-alpine AS runner
 
 COPY --from=composer/composer:latest-bin /composer /usr/bin/composer
 COPY docker/php.ini /usr/local/etc/php/conf.d/99-custom.ini
+COPY docker/php-dev.ini /usr/local/etc/php/conf.d/zz-dev.ini
+COPY docker/caddy/ /etc/frankenphp/hardening/
 
 RUN set -ex \
     && apk update \

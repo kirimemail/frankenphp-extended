@@ -25,7 +25,7 @@ docker pull kirimemail/frankenphp-extended:php83
 docker run -p 80:80 -p 443:443 -v $(pwd)/app:/app kirimemail/frankenphp-extended:php83
 
 # Use like any FrankenPHP image —
-# your PHP app goes in /app, Caddyfile in /etc/caddy/
+# your PHP app goes in /app, Caddyfile in /etc/frankenphp/Caddyfile
 ```
 
 ## Building Locally
@@ -49,10 +49,12 @@ services:
     ports:
       - "80:80"
       - "443:443"
-      - "2019:2019"  # Caddy admin API (optional)
+      - "2019:2019"  # Caddy admin API - local debugging only. Note: the
+                      # global-hardening snippet binds it to localhost, so
+                      # publishing the port only works without that snippet.
     volumes:
       - ./app:/app
-      - ./Caddyfile:/etc/caddy/Caddyfile
+      - ./Caddyfile:/etc/frankenphp/Caddyfile
       - ./supervisor:/etc/supervisor/conf.d  # Alpine only
     environment:
       - CADY_LOGGING_LEVEL=DEBUG
@@ -115,18 +117,9 @@ Only the Debian variant includes `build-essential` (available at build time, pur
 
 ### Custom php.ini
 
-A shared `docker/php.ini` is copied into all images:
+A shared `docker/php.ini` is copied into all images as `/usr/local/etc/php/conf.d/99-custom.ini`: upload/memory limits, error handling and the hardening described in [Hardening & Security](#hardening--security). The Alpine variant additionally installs `zz-dev.ini`, which re-enables `display_errors` for development.
 
-```ini
-upload_max_filesize = 24M
-post_max_size      = 32M
-max_file_uploads   = 20
-memory_limit       = 256M
-max_execution_time = 300
-max_input_time     = 300
-```
-
-Override any setting at runtime by mounting your own `.ini` to `/usr/local/etc/php/conf.d/`.
+Override any setting at runtime by mounting your own `.ini` into `/usr/local/etc/php/conf.d/` — a file sorting after `99-custom.ini` (e.g. `zz-local.ini`) wins. The Caddyfile `frankenphp` block can also set directives with `php_ini <key> <value>`.
 
 ### Supervisor (Alpine)
 
@@ -135,6 +128,68 @@ The Alpine variant has a `supervisor` configuration directory at `/etc/superviso
 ### PsySH
 
 A `/config/psysh` directory is pre‑created for [PsySH](https://psysh.org/) configuration — a runtime PHP debugger and REPL.
+
+## Hardening & Security
+
+### PHP — active by default
+
+Every image ships `docker/php.ini` as `conf.d/99-custom.ini`. No action needed:
+
+| Directive | Value | Effect |
+| ----------- | ------- | -------- |
+| `expose_php` | `Off` | No `X-Powered-By` header, no PHP version disclosure |
+| `display_errors`, `display_startup_errors`, `html_errors` | `Off` | Errors never reach the response body (no leaked paths, DSNs or credentials) |
+| `log_errors` / `error_log` | `On` / `/dev/stderr` | Errors remain visible through `docker logs` |
+| `zend.exception_ignore_args` | `On` | Function arguments (tokens, passwords) are not copied into stack traces |
+| `allow_url_include` | `Off` | No inclusion of remote code |
+| `enable_dl` / `phar.readonly` / `ffi.enable` | `Off` / `On` / `Off` | No runtime native-code loading, no writable PHARs, no FFI |
+| `user_ini.filename` | `""` | `.user.ini` files in the docroot cannot override configuration |
+| `session.*` | strict mode, cookies only, `HttpOnly`, `SameSite=Lax` | Session fixation / theft hardening |
+| `mail.add_x_header` | `Off` | No PHP binary path leaked into mail headers |
+
+`session.cookie_secure` stays `0` so plain-HTTP development works; set it to `1` in the application once traffic is HTTPS-only.
+
+The Alpine ("Development") variant adds `conf.d/zz-dev.ini`, which turns `display_errors` and exception arguments back on. Do not reuse that file in a production image.
+
+### FrankenPHP / Caddy — opt-in
+
+Two snippets are installed in every image under `/etc/frankenphp/hardening/`:
+
+| File | Import into | Content |
+| ------ | ------------- | --------- |
+| `security-headers.caddy` | a site block | strips `Server` and `X-Powered-By`, sets `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`, `Cross-Origin-Opener-Policy`, `Cross-Origin-Resource-Policy`, `Strict-Transport-Security` |
+| `global-hardening.caddy` | the global options block | binds the admin API to `localhost:2019`, `max_header_size 64KB`, `read_header_timeout 10s`, `idle_timeout 120s` (Slowloris protection) |
+
+They are opt-in because they change response behaviour (framing, HSTS, streaming). Enable them without replacing the bundled Caddyfile — the default config already splices these variables in:
+
+```yaml
+environment:
+  - SERVER_NAME=:80
+  - CADDY_GLOBAL_OPTIONS=import /etc/frankenphp/hardening/global-hardening.caddy
+  - CADDY_SERVER_EXTRA_DIRECTIVES=import /etc/frankenphp/hardening/security-headers.caddy
+```
+
+Or import them from your own Caddyfile:
+
+```caddyfile
+{
+	import /etc/frankenphp/hardening/global-hardening.caddy
+}
+
+example.com {
+	import /etc/frankenphp/hardening/security-headers.caddy
+	php_server
+}
+```
+
+Review before production: `X-Frame-Options: SAMEORIGIN` blocks third-party framing, `Cross-Origin-Resource-Policy: same-site` blocks cross-site asset embedding, and `Content-Security-Policy` is deliberately not set (it must match your app's assets and API origins). `write_body` timeouts are left unset so SSE, Mercure and large downloads are not truncated.
+
+### Runtime
+
+- The Debian variants run as `root` so a downstream Dockerfile can create its own user and switch with `USER`. Do not run them as root in production. `frankenphp` has `CAP_NET_BIND_SERVICE` (Alpine) so an unprivileged user can still bind 80/443.
+- The Alpine variants run as `app` (UID 1000) but grant **passwordless sudo** — a development convenience, not a production setting.
+- Suggested runtime flags: `--security-opt no-new-privileges`, `--cap-drop ALL --cap-add NET_BIND_SERVICE`, `--read-only` with `tmpfs` for `/tmp`, `/data` and `/config`, plus `--memory` and `--pids-limit`.
+- Use a floating tag (`php83`) for convenience but pin a digest or a `v*.*.*` release tag when reproducibility matters.
 
 ## CI/CD
 

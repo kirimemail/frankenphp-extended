@@ -1,0 +1,38 @@
+# kirimemail/frankenphp-extended - response header hardening for PHP sites
+#
+# Installed at: /etc/frankenphp/hardening/security-headers.caddy
+#
+# Usage - import it inside your site block, before `php_server`:
+#
+#     example.com {
+#         import /etc/frankenphp/hardening/security-headers.caddy
+#         php_server
+#     }
+#
+# Not mounting a Caddyfile at all? The stock image Caddyfile splices
+# {$CADDY_SERVER_EXTRA_DIRECTIVES} into every site block, so this is enough:
+#
+#   -e CADDY_SERVER_EXTRA_DIRECTIVES="import /etc/frankenphp/hardening/security-headers.caddy"
+#
+# `defer` makes the operations run when the response is written, so headers set
+# by the PHP application itself are stripped as well.
+header {
+	defer
+
+	-Server
+	-X-Powered-By
+
+	X-Content-Type-Options "nosniff"
+	X-Frame-Options "SAMEORIGIN"
+	Referrer-Policy "strict-origin-when-cross-origin"
+	Cross-Origin-Opener-Policy "same-origin-allow-popups"
+	Cross-Origin-Resource-Policy "same-site"
+	Strict-Transport-Security "max-age=31536000; includeSubDomains"
+	Permissions-Policy "accelerometer=(), camera=(), display-capture=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()"
+
+	# Optional, per application - disabled because both break common patterns:
+	#   Content-Security-Policy "default-src 'self'"              (needs a policy
+	#       tailored to your assets, inline scripts and API origins)
+	#   Cross-Origin-Embedder-Policy "require-corp"               (breaks
+	#       third-party images/fonts that lack CORP headers)
+}
