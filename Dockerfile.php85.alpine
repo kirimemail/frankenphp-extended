@@ -1,23 +1,25 @@
 FROM dunglas/frankenphp:1.13-php8.5-alpine AS runner
 
 COPY --from=composer/composer:latest-bin /composer /usr/bin/composer
-COPY docker/php.ini /usr/local/etc/php/conf.d/99-custom.ini
-COPY docker/php-dev.ini /usr/local/etc/php/conf.d/zz-dev.ini
-COPY docker/caddy/ /etc/frankenphp/hardening/
 
+# Extensions layer: ZTS PHP, so extensions are compiled from source. Kept
+# separate so tooling or config edits never trigger a recompile; the build
+# dependencies are removed again in this same layer.
+# excimer is unavailable for PHP 8.5.
 RUN set -ex \
-    && apk update \
     && apk add --no-cache --virtual .build-deps $PHPIZE_DEPS \
     && install-php-extensions \
-        pdo_mysql pdo_pgsql gd intl zip opcache mysqli bcmath \
+        pdo_mysql pdo_pgsql gd intl zip mysqli bcmath \
         redis imagick pcntl soap exif calendar sockets \
         memcached mongodb yaml igbinary amqp imap mailparse \
     && apk del .build-deps \
     && rm -rf /var/cache/apk/*
 
+# Tooling layer: stable, cached separately from the compilation above.
 RUN apk add --no-cache \
         postgresql-libs sudo supervisor unzip p7zip qpdf zip \
-        procps traceroute iputils busybox-extras bind-tools net-tools mtr strace tcpdump jq nodejs npm nano imagemagick ghostscript \
+        procps traceroute iputils busybox-extras bind-tools net-tools \
+        mtr strace tcpdump jq nodejs npm nano imagemagick ghostscript \
     && npm install -g chokidar-cli \
     && rm -rf /var/cache/apk/*
 
@@ -29,5 +31,10 @@ RUN addgroup -g 1000 ${USER} \
     && chown -R ${USER}:${USER} /data/caddy /config \
     && echo "${USER} ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/${USER} \
     && chmod 0440 /etc/sudoers.d/${USER}
+
+# Application config and hardening last: the cheapest layers to rebuild.
+COPY docker/php.ini /usr/local/etc/php/conf.d/99-custom.ini
+COPY docker/php-dev.ini /usr/local/etc/php/conf.d/zz-dev.ini
+COPY docker/caddy/ /etc/frankenphp/hardening/
 
 USER ${USER}

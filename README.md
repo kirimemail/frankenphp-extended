@@ -40,6 +40,13 @@ docker build -t frankenphp-extended:php83-alpine -f Dockerfile.php83.alpine .
 
 Replace `php83` with `php84` or `php85` for other versions.
 
+### Build performance
+
+- FrankenPHP ships a **ZTS** PHP build, so `install-php-extensions` has no prebuilt binaries and compiles every extension from source. That compilation dominates build time.
+- The extension compilation is its own layer and every config `COPY` comes last, so editing `php.ini` or the Caddy hardening snippets rebuilds in seconds without recompiling anything.
+- Build one platform at a time locally (`--platform linux/amd64`). Cross-building the other architecture falls back to emulation and is several times slower.
+- `opcache` is already compiled into the base image and is deliberately not installed again.
+
 ## Docker Compose
 
 ```yaml
@@ -195,10 +202,11 @@ Review before production: `X-Frame-Options: SAMEORIGIN` blocks third-party frami
 
 The repository includes a GitHub Actions workflow (`.github/workflows/docker-build.yml`) that:
 
-- Builds **all 6 images** on push to `main`, tags matching `v*.*.*`, or manual trigger
-- Builds on PRs (push only, no deploy)
-- Builds for **`linux/amd64`** and **`linux/arm64`** via Docker Buildx + QEMU
-- Caches layers with GitHub Actions cache (`type=gha`)
+- Builds **3 PHP versions × 2 variants × 2 architectures** (12 jobs) on push to `main`, on `v*.*.*` tags, on manual dispatch and on pull requests (PRs build only, no push)
+- Runs when a `Dockerfile.*`, anything under `docker/` (`php.ini`, Caddy hardening) or the workflow itself changes — config-only edits used to be ignored
+- Uses **native runners per architecture** — `ubuntu-latest` for `linux/amd64` and `ubuntu-24.04-arm` for `linux/arm64` — instead of QEMU emulation. Emulated arm64 extension compilation was ~80% of a 76 minute run; a native build of the slowest image now takes ~7 minutes, so the whole matrix finishes in well under 15
+- Pushes a digest per architecture, then a follow-up merge job assembles the multi-arch manifest for `php83`, `php83-alpine`, …
+- Caches layers per image **and** per architecture (`type=gha`, scope `<tag>-<variant>-<arch>`), so the previous single shared cache scope no longer made the jobs evict each other
 - Pushes to Docker Hub under the `kirimemail` organization
 
 Trigger a manual build: **Actions** → **Build and Push Docker Images** → **Run workflow**.
