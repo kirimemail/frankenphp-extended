@@ -204,7 +204,7 @@ The repository includes a GitHub Actions workflow (`.github/workflows/docker-bui
 
 - Builds **3 PHP versions × 2 variants × 2 architectures** (12 jobs) on push to `main`, on `v*.*.*` tags, on manual dispatch and on pull requests (PRs build only, no push)
 - Runs when a `Dockerfile.*`, anything under `docker/` (`php.ini`, Caddy hardening) or the workflow itself changes — config-only edits used to be ignored
-- Uses **native runners per architecture** — `ubuntu-latest` for `linux/amd64` and `ubuntu-24.04-arm` for `linux/arm64` — instead of QEMU emulation. Emulated arm64 extension compilation was ~80% of a 76 minute run; a native build of the slowest image now takes ~7 minutes, so the whole matrix finishes in well under 15
+- Uses **native runners per architecture** — `ubuntu-latest` for `linux/amd64` and `ubuntu-24.04-arm` for `linux/arm64` — instead of QEMU emulation. Emulated arm64 extension compilation was ~80% of the old 76 minute run; the same matrix now completes in about 5.5 minutes (measured: 323 s for 12 builds + 6 merges)
 - Pushes a digest per architecture, then a follow-up merge job assembles the multi-arch manifest for `php83`, `php83-alpine`, …
 - Caches layers per image **and** per architecture (`type=gha`, scope `<tag>-<variant>-<arch>`), so the previous single shared cache scope no longer made the jobs evict each other
 - Pushes to Docker Hub under the `kirimemail` organization
