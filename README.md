@@ -162,9 +162,9 @@ Every image ships `docker/php.ini` as `conf.d/99-custom.ini`. No action needed:
 
 The Alpine ("Development") variant adds `conf.d/zz-dev.ini`, which turns `display_errors` and exception arguments back on. Do not reuse that file in a production image.
 
-### FrankenPHP / Caddy — opt-in
+### FrankenPHP / Caddy — on by default
 
-Two snippets are installed in every image under `/etc/frankenphp/hardening/`:
+Three snippets are installed in every image under `/etc/frankenphp/hardening/`, and the bundled `docker/Caddyfile` (shipped as `/etc/frankenphp/Caddyfile`) imports all three — no env vars or custom Caddyfile needed:
 
 | File | Import into | Content |
 | ------ | ------------- | --------- |
@@ -172,7 +172,7 @@ Two snippets are installed in every image under `/etc/frankenphp/hardening/`:
 | `global-hardening.caddy` | the global options block | binds the admin API to `localhost:2019`, `max_header_size 64KB`, `read_header_timeout 10s`, `idle_timeout 120s` (Slowloris protection) |
 | `static-cache.caddy` | a site block | three-tier `Cache-Control` for static extensions only: hashed filenames and `?v=` URLs get `public, max-age=31536000, immutable`, plain statics get `public, max-age=86400` (ETag/304 revalidation) |
 
-They are opt-in because they change response behaviour (framing, HSTS, streaming). Enable them without replacing the bundled Caddyfile — the default config already splices these variables in:
+The bundled Caddyfile is the stock upstream config plus those three imports, with all `{$...}` splices preserved. To opt out, mount your own Caddyfile at `/etc/frankenphp/Caddyfile`. The env splices still work for extra directives (re-importing a snippet is harmless):
 
 ```yaml
 environment:

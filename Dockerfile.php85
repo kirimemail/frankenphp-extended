@@ -37,3 +37,4 @@ RUN set -ex \
 # Application config and hardening last: the cheapest layers to rebuild.
 COPY docker/php.ini /usr/local/etc/php/conf.d/99-custom.ini
 COPY docker/caddy/ /etc/frankenphp/hardening/
+COPY docker/Caddyfile /etc/frankenphp/Caddyfile

@@ -36,5 +36,6 @@ RUN addgroup -g 1000 ${USER} \
 COPY docker/php.ini /usr/local/etc/php/conf.d/99-custom.ini
 COPY docker/php-dev.ini /usr/local/etc/php/conf.d/zz-dev.ini
 COPY docker/caddy/ /etc/frankenphp/hardening/
+COPY docker/Caddyfile /etc/frankenphp/Caddyfile
 
 USER ${USER}
