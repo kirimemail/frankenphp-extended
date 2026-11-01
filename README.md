@@ -128,6 +128,10 @@ A shared `docker/php.ini` is copied into all images as `/usr/local/etc/php/conf.
 
 Override any setting at runtime by mounting your own `.ini` into `/usr/local/etc/php/conf.d/` — a file sorting after `99-custom.ini` (e.g. `zz-local.ini`) wins. The Caddyfile `frankenphp` block can also set directives with `php_ini <key> <value>`.
 
+### OPcache
+
+OPcache is enabled in `docker/php.ini` (256 MB, 20k files, full `optimization_level`, `enable_file_override=1` so `file_exists()` hits the index, JIT `tracing` with a 128 MB buffer, `validate_timestamps=0` — restart the container on each deploy to refresh opcodes). The Alpine variant re-enables timestamp validation via `zz-dev.ini` (`validate_timestamps=1`, `revalidate_freq=0`, `enable_file_override=0`) so edits apply immediately. Realpath cache is sized for frameworks: `realpath_cache_size=4096K`, `realpath_cache_ttl=600`. Output is buffered (`output_buffering=4096`, `implicit_flush=Off`), `pcre.jit=1`, and sessions use the `igbinary` serializer that already ships in every variant.
+
 ### Supervisor (Alpine)
 
 The Alpine variant has a `supervisor` configuration directory at `/etc/supervisor/conf.d/` and runs as the `app` user with passwordless `sudo` access. Mount your supervisor configs to start background processes alongside FrankenPHP.
@@ -166,6 +170,7 @@ Two snippets are installed in every image under `/etc/frankenphp/hardening/`:
 | ------ | ------------- | --------- |
 | `security-headers.caddy` | a site block | strips `Server` and `X-Powered-By`, sets `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`, `Cross-Origin-Opener-Policy`, `Cross-Origin-Resource-Policy`, `Strict-Transport-Security` |
 | `global-hardening.caddy` | the global options block | binds the admin API to `localhost:2019`, `max_header_size 64KB`, `read_header_timeout 10s`, `idle_timeout 120s` (Slowloris protection) |
+| `static-cache.caddy` | a site block | three-tier `Cache-Control` for static extensions only: hashed filenames and `?v=` URLs get `public, max-age=31536000, immutable`, plain statics get `public, max-age=86400` (ETag/304 revalidation) |
 
 They are opt-in because they change response behaviour (framing, HSTS, streaming). Enable them without replacing the bundled Caddyfile — the default config already splices these variables in:
 
@@ -175,6 +180,8 @@ environment:
   - CADDY_GLOBAL_OPTIONS=import /etc/frankenphp/hardening/global-hardening.caddy
   - CADDY_SERVER_EXTRA_DIRECTIVES=import /etc/frankenphp/hardening/security-headers.caddy
 ```
+
+Stack the static-asset cache headers the same way (needs a real newline between imports — `"...security-headers.caddy\nimport ...static-cache.caddy"` in compose):
 
 Or import them from your own Caddyfile:
 
@@ -189,7 +196,7 @@ example.com {
 }
 ```
 
-Review before production: `X-Frame-Options: SAMEORIGIN` blocks third-party framing, `Cross-Origin-Resource-Policy: same-site` blocks cross-site asset embedding, and `Content-Security-Policy` is deliberately not set (it must match your app's assets and API origins). `write_body` timeouts are left unset so SSE, Mercure and large downloads are not truncated.
+Review before production: `X-Frame-Options: SAMEORIGIN` blocks third-party framing, `Cross-Origin-Resource-Policy: same-site` blocks cross-site asset embedding, and `Content-Security-Policy` is deliberately not set (it must match your app's assets and API origins). `write_body` timeouts are left unset so SSE, Mercure and large downloads are not truncated. `static-cache.caddy` only matches static file extensions, but a dynamic route shaped like a hashed asset (e.g. `/export.abcdef12.pdf`) would inherit the 1-year immutable header — keep dynamic downloads on extensionless or unhashed URLs.
 
 ### Runtime
 
