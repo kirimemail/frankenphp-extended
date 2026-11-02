@@ -2,17 +2,23 @@
 #
 # Installed at: /etc/frankenphp/hardening/security-headers.caddy
 #
-# Usage - import it inside your site block, before `php_server`:
+# STATUS: enabled by default. The bundled Caddyfile (/etc/frankenphp/Caddyfile)
+# already imports this snippet (before `php_server`) - do NOT re-import it.
+#
+# The {$CADDY_SERVER_EXTRA_DIRECTIVES} splice remains for YOUR OWN additive
+# directives only. Re-importing the hardening snippets via env crash-loops
+# Caddy at startup, e.g.:
+#
+#   adapting config using caddyfile: matcher is defined more than once:
+#   @immutable_hash
+#
+# Only import this snippet explicitly when you mount your OWN Caddyfile
+# (which replaces the bundled one and therefore doesn't include it):
 #
 #     example.com {
 #         import /etc/frankenphp/hardening/security-headers.caddy
 #         php_server
 #     }
-#
-# Not mounting a Caddyfile at all? The stock image Caddyfile splices
-# {$CADDY_SERVER_EXTRA_DIRECTIVES} into every site block, so this is enough:
-#
-#   -e CADDY_SERVER_EXTRA_DIRECTIVES="import /etc/frankenphp/hardening/security-headers.caddy"
 #
 # `defer` makes the operations run when the response is written, so headers set
 # by the PHP application itself are stripped as well.

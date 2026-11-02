@@ -172,18 +172,22 @@ Three snippets are installed in every image under `/etc/frankenphp/hardening/`, 
 | `global-hardening.caddy` | the global options block | binds the admin API to `localhost:2019`, `max_header_size 64KB`, `read_header_timeout 10s`, `idle_timeout 120s` (Slowloris protection) |
 | `static-cache.caddy` | a site block | three-tier `Cache-Control` for static extensions only: hashed filenames and `?v=` URLs get `public, max-age=31536000, immutable`, plain statics get `public, max-age=86400` (ETag/304 revalidation) |
 
-The bundled Caddyfile is the stock upstream config plus those three imports, with all `{$...}` splices preserved. To opt out, mount your own Caddyfile at `/etc/frankenphp/Caddyfile`. The env splices still work for extra directives (re-importing a snippet is harmless):
+The bundled Caddyfile is the stock upstream config plus those three imports, with all `{$...}` splices preserved. To opt out, mount your own Caddyfile at `/etc/frankenphp/Caddyfile`.
+
+The `{$...}` splices remain for your own *additive* directives only (e.g. a `/healthz` responder or an Octane wrapper's extra settings). Never use them to re-import the snippets above — a second import crash-loops Caddy at startup:
+
+```text
+adapting config using caddyfile: cannot have 'servers' global options with duplicate listener addresses
+adapting config using caddyfile: matcher is defined more than once: @immutable_hash
+```
 
 ```yaml
 environment:
   - SERVER_NAME=:80
-  - CADDY_GLOBAL_OPTIONS=import /etc/frankenphp/hardening/global-hardening.caddy
-  - CADDY_SERVER_EXTRA_DIRECTIVES=import /etc/frankenphp/hardening/security-headers.caddy
+  - CADDY_SERVER_EXTRA_DIRECTIVES=handle_path /healthz* { respond "ok" 200 }
 ```
 
-Stack the static-asset cache headers the same way (needs a real newline between imports — `"...security-headers.caddy\nimport ...static-cache.caddy"` in compose):
-
-Or import them from your own Caddyfile:
+If you mount your own Caddyfile (which replaces the bundled one and therefore includes none of the snippets), import the ones you want explicitly:
 
 ```caddyfile
 {

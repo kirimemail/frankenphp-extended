@@ -6,9 +6,13 @@
 # /etc/frankenphp/hardening/ are enabled by default, so downstream images
 # need no env vars and no custom Caddyfile to get them.
 #
-# The {$...} splices are preserved: existing setups that set
-# CADDY_GLOBAL_OPTIONS / CADDY_SERVER_EXTRA_DIRECTIVES keep working
-# (re-importing a snippet is harmless - `header` replaces, it doesn't stack).
+# The {$...} splices are preserved for YOUR OWN additive directives only
+# (e.g. an Octane wrapper's extra site-block settings). Do NOT use them to
+# re-import the hardening snippets below: a second `servers { }` block or a
+# duplicate named matcher is FATAL and Caddy refuses to start. (Bare `header`
+# lines would merely replace each other, but the `servers` block in
+# global-hardening and the @immutable_* / @static matchers in static-cache
+# cannot appear twice.)
 # To opt OUT of the defaults, mount your own Caddyfile at this path.
 #
 # The Caddyfile is an easy way to configure FrankenPHP and the Caddy web server.
